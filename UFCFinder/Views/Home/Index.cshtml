@@ -1,0 +1,155 @@
+﻿@model UFCFinder.Models.UFCSearch
+@using UFCFinder.Models
+@{
+    Layout = "../Shared/_Layout.cshtml";
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#ufcform").on("submit", function () {
+            $(".form").hide();
+            $(".processing").show();
+        });
+    });
+
+    function fbLogin() {
+        FB.getLoginStatus(function (response) {
+            if (response.status === 'connected') {
+                $(".login").hide();
+                $(".loggedIn").show();
+                var accessToken = response.authResponse.accessToken;
+                $("#FBAccessToken").val(accessToken);
+            } else {
+                FB.login(function (response) {
+                    if (response.authResponse) {
+                        $(".login").hide();
+                        $(".loggedIn").show();
+                        var accessToken = response.authResponse.accessToken;
+                        $("#FBAccessToken").val(accessToken);
+                    }
+                });
+            }
+        });
+    }
+</script>
+
+<div class="jumbotron">
+    <h1>UFC Event Host Finder</h1>
+    <p class="lead">Enter the information below to find illegally hosted events.</p>
+</div>
+
+@using (Html.BeginForm("Index", "Home", FormMethod.Post, new { enctype = "multipart/form-data", @id = "ufcform" }))
+{
+    @Html.HiddenFor(f => f.FBAccessToken)
+
+    @Html.ValidationSummary(false)
+
+    if (Model.Results == null)
+    {
+        <div class="form">
+            <div class="login" style="display: @(string.IsNullOrEmpty(Model.FBAccessToken) ? "block" : "none")">
+                <h4>Log into Facebook before submitting your request</h4>
+                <input id="login" type="button" onclick="fbLogin()" value="Log in to Facebook" />
+            </div>
+            <div class="loggedIn" style="display: @(string.IsNullOrEmpty(Model.FBAccessToken) ? "none" : "block")">
+                You are logged in to Facebook
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-md-4">
+                    @Html.LabelFor(f => f.LegalList, "Select a Legal List")<br />
+                    <input type="file" name="LegalList" id="LegalList" />
+                </div>
+                <div class="col-md-4">
+                    @Html.LabelFor(f => f.WatchList, "Select a Watch List")<br />
+                    <input type="file" name="WatchList" id="WatchList" />
+                </div>
+                <div class="col-md-4">
+                    @Html.LabelFor(f => f.SearchPhrases, "Enter Search Phrases (one per line)")<br />
+                    @Html.TextAreaFor(f => f.SearchPhrases, new { style = "width: 100%; height: 100px" })
+                </div>
+            </div>
+            <input id="submit" type="submit" value="Find Hosted Events" />
+        </div>
+        <div class="processing" style="display: none">
+            <div class="row">
+                Processing results...  Don't close this window.
+            </div>
+        </div>
+    }
+    else
+    {
+        <a href="/?token=@Model.FBAccessToken">&laquo; Submit another query</a>
+        <h3>Legal Locations on Watch List</h3>
+        if (Model.LegalLocations.Count() == 0)
+        {
+        }
+        else
+        {
+            <div class="results">
+                <table class="resultsTable">
+                    <thead>
+                        <tr>
+                            <td class="business-col">Business</td>
+                            <td class="address-col">Address</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (UFCLocation location in Model.LegalLocations)
+                        {
+                            <tr>
+                                <td class="business-col">@location.Business</td>
+                                <td class="address-col">
+                                    @location.Address<br />
+                                    @location.City, @location.State @location.Zip
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <h2>Query Results</h2>
+        if (Model.Results.Count() == 0)
+        {
+            @:No locations matched your query
+        }
+        else
+        {
+            <div class="results">
+                <table class="resultsTable">
+                    <thead>
+                        <tr>
+                            <td class="first-col">Business</td>
+                            <td class="second-col">Address</td>
+                            <td class="third-col">URL</td>
+                            <td class="fourth-col">Matched Phrases</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (UFCResult result in Model.Results)
+                        {
+                            <tr>
+                                <td class="first-col">@result.Location.Business</td>
+                                <td class="second-col">
+                                    @result.Location.Address<br />
+                                    @result.Location.City, @result.Location.State @result.Location.Zip
+                                </td>
+                                <td class="third-col"><a href="@result.URL" target="_blank">@result.URL</a></td>
+                                <td class="fourth-col">
+                                    @foreach (string phrase in result.PhraseMatches)
+                                    {
+                                        @phrase<br />
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        @:<br/>&nbsp;
+        @:<br />&nbsp;
+    }
+}
