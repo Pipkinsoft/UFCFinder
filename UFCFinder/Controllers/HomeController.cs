@@ -17,6 +17,8 @@ namespace UFCFinder.Controllers
         public ActionResult Index()
         {
             UFCSearch search = new UFCSearch();
+            
+            // Check for a FB access token
             if (Request.QueryString["token"] != null) search.FBAccessToken = Request.QueryString["token"];
 
             return View(search);
@@ -26,6 +28,8 @@ namespace UFCFinder.Controllers
         public ActionResult Index(UFCSearch search)
         {
             bool errors = false;
+
+            // Check for input errors
 
             if (string.IsNullOrEmpty(search.FBAccessToken))
             {
@@ -76,6 +80,7 @@ namespace UFCFinder.Controllers
 
                 bool noErrors = true;
 
+                // Process the entries in the legal list
                 try
                 {
                     using (SLDocument workbook = new SLDocument(search.LegalList.InputStream))
@@ -101,7 +106,7 @@ namespace UFCFinder.Controllers
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     ModelState.AddModelError("LegalList", "There is a format problem with the Legal List");
                     noErrors = false;
@@ -109,6 +114,7 @@ namespace UFCFinder.Controllers
 
                 if (noErrors)
                 {
+                    // Process the entries in the watch list
                     try
                     {
                         using (SLDocument workbook = new SLDocument(search.WatchList.InputStream))
@@ -142,7 +148,7 @@ namespace UFCFinder.Controllers
                             }
                         }
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         ModelState.AddModelError("WatchList", "There is a format problem with the Watch List");
                         noErrors = false;
@@ -154,19 +160,23 @@ namespace UFCFinder.Controllers
                         {
                             client.Headers[HttpRequestHeader.UserAgent] = "Opera/9.80 (J2ME/MIDP; Opera Mini/9 (Compatible; MSIE:9.0; iPhone; BlackBerry9700; AppleWebKit/24.746; U; en) Presto/2.5.25 Version/10.54";
 
+                            // Go through the locations in the watch list
                             foreach (UFCLocation location in watchList)
                             {
+                                // Check if the location is also in the legal list.  If so, don't process
                                 if (legalList.Where(l => l.LocationString == location.LocationString).Any())
                                 {
                                     search.LegalLocations.Add(location);
                                     continue;
                                 }
 
+                                // Process each URL for the location
                                 foreach (string url in location.URLs)
                                 {
                                     List<string> matchedPhrases = new List<string>();
                                     string finalUrl = url;
 
+                                    // Check for specific social media URLs and make them into API request URLs
                                     if (url.IndexOf("facebook.com") > -1)
                                     {
                                         Regex regex = new Regex(@"^https?://www.facebook.com/(events/(?<alias>\d+)|pg/[^/]+\-(?<alias>\d+)|pages/[^/]+/(?<alias>\d+)|[^/]+\-(?<alias>\d+)|(?<alias>[^/]+)).*$");
@@ -182,16 +192,27 @@ namespace UFCFinder.Controllers
                                                     );
                                         }
                                     }
+                                    else if (url.IndexOf("twitter.com") > -1)
+                                    {
+                                        // process twitter url
+                                    }
+                                    else if (url.IndexOf("instagram.com") > -1)
+                                    {
+                                        // process instagram url
+                                    }
 
                                     try
                                     {
+                                        // Get response from the URL
                                         string html = client.DownloadString(finalUrl).ToLower().Replace("\\'", "'").Replace("\\n", " ");
 
+                                        // Check if any of the search phrases match the result
                                         foreach (string phrase in searchPhrases)
                                         {
                                             if (html.IndexOf(phrase) > -1) matchedPhrases.Add(phrase);
                                         }
 
+                                        // If there are matched phrases, add the location to the result set
                                         if (matchedPhrases.Count() > 0)
                                         {
                                             search.Results.Add(new UFCResult()
@@ -204,7 +225,7 @@ namespace UFCFinder.Controllers
                                     }
                                     catch (WebException ex)
                                     {
-                                        ModelState.AddModelError("Results", "There was an issue downloading " + url);
+                                        ModelState.AddModelError("Results", "There was an issue downloading " + url + ": " + ex.Message);
                                     }
                                 }
                             }
@@ -218,6 +239,7 @@ namespace UFCFinder.Controllers
 
         private string getLocationString(string address, string city, string state, string zip)
         {
+            // Create a uniform location string that can be used for matching
             return
                 (
                     address.Trim().ToLower() +
