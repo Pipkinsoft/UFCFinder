@@ -27,9 +27,11 @@ namespace UFCFinder.Models
     {
         public HttpPostedFileBase LegalList { get; set; }
         public HttpPostedFileBase WatchList { get; set; }
+        public string Email { get; set; }
         public string SearchPhrases { get; set; }
         public string FBAccessToken { get; set; }
         public List<UFCLocation> LegalLocations { get; set; }
         public List<UFCResult> Results { get; set; }
+        public List<string> Errors { get; set; }
     }
 }

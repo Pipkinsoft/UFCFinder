@@ -145,6 +145,7 @@
     </Compile>
     <Compile Include="Models\UFCSearchcs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ListProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-theme.css" />

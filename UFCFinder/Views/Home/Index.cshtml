@@ -44,7 +44,7 @@
 
     @Html.ValidationSummary(false)
 
-    if (Model.Results == null)
+    if (ViewBag.Success == null)
     {
         <div class="form">
             <div class="login" style="display: @(string.IsNullOrEmpty(Model.FBAccessToken) ? "block" : "none")">
@@ -56,100 +56,37 @@
             </div>
             <br />
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     @Html.LabelFor(f => f.LegalList, "Select a Legal List")<br />
                     <input type="file" name="LegalList" id="LegalList" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     @Html.LabelFor(f => f.WatchList, "Select a Watch List")<br />
                     <input type="file" name="WatchList" id="WatchList" />
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     @Html.LabelFor(f => f.SearchPhrases, "Enter Search Phrases (one per line)")<br />
                     @Html.TextAreaFor(f => f.SearchPhrases, new { style = "width: 100%; height: 100px" })
+                </div>
+                <div class="col-md-3">
+                    @Html.LabelFor(f => f.Email, "Email Address to Receive the Results")<br />
+                    @Html.TextBoxFor(f => f.Email, new { style = "width: 100%" })
                 </div>
             </div>
             <input id="submit" type="submit" value="Find Hosted Events" />
         </div>
         <div class="processing" style="display: none">
             <div class="row">
-                Processing results...  Don't close this window.
+                Preparing list for processing, don't close this window...
             </div>
         </div>
     }
     else
     {
-        <a href="/?token=@Model.FBAccessToken">&laquo; Submit another query</a>
-        <h3>Legal Locations on Watch List</h3>
-        if (Model.LegalLocations.Count() == 0)
-        {
-        }
-        else
-        {
-            <div class="results">
-                <table class="resultsTable">
-                    <thead>
-                        <tr>
-                            <td class="business-col">Business</td>
-                            <td class="address-col">Address</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (UFCLocation location in Model.LegalLocations)
-                        {
-                            <tr>
-                                <td class="business-col">@location.Business</td>
-                                <td class="address-col">
-                                    @location.Address<br />
-                                    @location.City, @location.State @location.Zip
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-
-        <h2>Query Results</h2>
-        if (Model.Results.Count() == 0)
-        {
-            @:No locations matched your query
-        }
-        else
-        {
-            <div class="results">
-                <table class="resultsTable">
-                    <thead>
-                        <tr>
-                            <td class="first-col">Business</td>
-                            <td class="second-col">Address</td>
-                            <td class="third-col">URL</td>
-                            <td class="fourth-col">Matched Phrases</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (UFCResult result in Model.Results)
-                        {
-                            <tr>
-                                <td class="first-col">@result.Location.Business</td>
-                                <td class="second-col">
-                                    @result.Location.Address<br />
-                                    @result.Location.City, @result.Location.State @result.Location.Zip
-                                </td>
-                                <td class="third-col"><a href="@result.URL" target="_blank">@result.URL</a></td>
-                                <td class="fourth-col">
-                                    @foreach (string phrase in result.PhraseMatches)
-                                    {
-                                        @phrase<br />
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        @:<br/>&nbsp;
-        @:<br />&nbsp;
+        <div>
+            Your list is processing.  You will be emailed the results when it's finished.
+            <br/>&nbsp;
+            <br />&nbsp;
+        </div>
     }
 }

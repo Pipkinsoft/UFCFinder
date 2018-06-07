@@ -8,6 +8,10 @@ using UFCFinder.Models;
 using SpreadsheetLight;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using UFCFinder.Services;
+using System.Web.Hosting;
 
 namespace UFCFinder.Controllers
 {
@@ -27,6 +31,12 @@ namespace UFCFinder.Controllers
         [HttpPost]
         public ActionResult Index(UFCSearch search)
         {
+            if (HttpContext.Application["Processing"] != null)
+            {
+                ModelState.AddModelError("General", "A list is currently being processed, please wait for the results before processing another list");
+                return View(search);
+            }
+
             bool errors = false;
 
             // Check for input errors
@@ -65,13 +75,17 @@ namespace UFCFinder.Controllers
                 errors = true;
             }
 
+            if (string.IsNullOrEmpty(search.Email))
+            {
+                ModelState.AddModelError("Email", "An email address is required to receive the results");
+                errors = true;
+            }
+
             if (!errors)
             {
                 List<UFCLocation> legalList = new List<UFCLocation>();
                 List<UFCLocation> watchList = new List<UFCLocation>();
                 List<string> searchPhrases = new List<string>();
-                search.LegalLocations = new List<UFCLocation>();
-                search.Results = new List<UFCResult>();
 
                 foreach (string phrase in search.SearchPhrases.Trim().Split('\n'))
                 {
@@ -141,7 +155,7 @@ namespace UFCFinder.Controllers
                                 {
                                     if (!string.IsNullOrEmpty(url.Trim())) location.URLs.Add(url.Trim());
                                 }
-    
+
                                 watchList.Add(location);
 
                                 row++;
@@ -156,80 +170,18 @@ namespace UFCFinder.Controllers
 
                     if (noErrors)
                     {
-                        using (WebClient client = new WebClient())
-                        {
-                            client.Headers[HttpRequestHeader.UserAgent] = "Opera/9.80 (J2ME/MIDP; Opera Mini/9 (Compatible; MSIE:9.0; iPhone; BlackBerry9700; AppleWebKit/24.746; U; en) Presto/2.5.25 Version/10.54";
-
-                            // Go through the locations in the watch list
-                            foreach (UFCLocation location in watchList)
-                            {
-                                // Check if the location is also in the legal list.  If so, don't process
-                                if (legalList.Where(l => l.LocationString == location.LocationString).Any())
-                                {
-                                    search.LegalLocations.Add(location);
-                                    continue;
-                                }
-
-                                // Process each URL for the location
-                                foreach (string url in location.URLs)
-                                {
-                                    List<string> matchedPhrases = new List<string>();
-                                    string finalUrl = url;
-
-                                    // Check for specific social media URLs and make them into API request URLs
-                                    if (url.IndexOf("facebook.com") > -1)
-                                    {
-                                        Regex regex = new Regex(@"^https?://www.facebook.com/(events/(?<alias>\d+)|pg/[^/]+\-(?<alias>\d+)|pages/[^/]+/(?<alias>\d+)|[^/]+\-(?<alias>\d+)|(?<alias>[^/]+)).*$");
-                                        Match match = regex.Match(url);
-
-                                        if (match.Success)
-                                        {
-                                            finalUrl =
-                                                string.Format(
-                                                    "https://graph.facebook.com/{0}/posts?access_token={1}",
-                                                    match.Groups["alias"].Value,
-                                                    search.FBAccessToken
-                                                    );
-                                        }
-                                    }
-                                    else if (url.IndexOf("twitter.com") > -1)
-                                    {
-                                        // process twitter url
-                                    }
-                                    else if (url.IndexOf("instagram.com") > -1)
-                                    {
-                                        // process instagram url
-                                    }
-
-                                    try
-                                    {
-                                        // Get response from the URL
-                                        string html = client.DownloadString(finalUrl).ToLower().Replace("\\'", "'").Replace("\\n", " ");
-
-                                        // Check if any of the search phrases match the result
-                                        foreach (string phrase in searchPhrases)
-                                        {
-                                            if (html.IndexOf(phrase) > -1) matchedPhrases.Add(phrase);
-                                        }
-
-                                        // If there are matched phrases, add the location to the result set
-                                        if (matchedPhrases.Count() > 0)
-                                        {
-                                            search.Results.Add(new UFCResult()
-                                            {
-                                                Location = location,
-                                                URL = url,
-                                                PhraseMatches = matchedPhrases
-                                            });
-                                        }
-                                    }
-                                    catch (WebException ex)
-                                    {
-                                        ModelState.AddModelError("Results", "There was an issue downloading " + url + ": " + ex.Message);
-                                    }
-                                }
-                            }
-                        }
+                        HostingEnvironment.QueueBackgroundWorkItem(cancellationToken => 
+                            ListProcessor.ProcessList(
+                                HttpContext.Application,
+                                HttpContext.Server,
+                                legalList, 
+                                watchList, 
+                                searchPhrases, 
+                                search.Email, 
+                                search.FBAccessToken,
+                                cancellationToken
+                                ));
+                        ViewBag.Success = true;
                     }
                 }
             }
