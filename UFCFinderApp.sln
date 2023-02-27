@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2002
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UFCFinderApp", "UFCFinderApp\UFCFinderApp.csproj", "{833C84DA-0ABC-4E6F-8CDE-C09115CEE680}"
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "UfcFinderSetup", "UfcFinderSetup\UfcFinderSetup.vdproj", "{5C0445D6-50D8-4DB0-8CF3-8D19ACBFE002}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,12 +27,6 @@ Global
 		{833C84DA-0ABC-4E6F-8CDE-C09115CEE680}.Release|x64.Build.0 = Release|x64
 		{833C84DA-0ABC-4E6F-8CDE-C09115CEE680}.Release|x86.ActiveCfg = Release|x86
 		{833C84DA-0ABC-4E6F-8CDE-C09115CEE680}.Release|x86.Build.0 = Release|x86
-		{5C0445D6-50D8-4DB0-8CF3-8D19ACBFE002}.Debug|Any CPU.ActiveCfg = Debug
-		{5C0445D6-50D8-4DB0-8CF3-8D19ACBFE002}.Debug|x64.ActiveCfg = Debug
-		{5C0445D6-50D8-4DB0-8CF3-8D19ACBFE002}.Debug|x86.ActiveCfg = Debug
-		{5C0445D6-50D8-4DB0-8CF3-8D19ACBFE002}.Release|Any CPU.ActiveCfg = Release
-		{5C0445D6-50D8-4DB0-8CF3-8D19ACBFE002}.Release|x64.ActiveCfg = Release
-		{5C0445D6-50D8-4DB0-8CF3-8D19ACBFE002}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

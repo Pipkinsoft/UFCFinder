@@ -10,6 +10,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{833C84DA-0ABC-4E6F-8CDE-C09115CEE680}</ProjectGuid>
     <OutputType>WinExe</OutputType>
+	<OutputPath>bin\Debug\</OutputPath>
     <RootNamespace>UFCFinderApp</RootNamespace>
     <AssemblyName>UFCFinderApp</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
@@ -63,6 +64,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>ufc.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HtmlRenderer, Version=1.5.0.5, Culture=neutral, processorArchitecture=MSIL">

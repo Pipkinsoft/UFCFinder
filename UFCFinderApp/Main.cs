@@ -33,17 +33,18 @@ namespace UFCFinderApp
             Cef.Initialize(new CefSettings()
             {
                 IgnoreCertificateErrors = true,
+                WindowlessRenderingEnabled = true,
                 UserAgent = "Mozilla/5.0 (Linux; Android 7.0; SM-G930V Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.125 Mobile Safari/537.36"
             });
 
             DependencyChecker.AssertAllDependenciesPresent();
-
+            
             Browser = new ChromiumWebBrowser(string.Empty, new BrowserSettings()
             {
                 ImageLoading = CefState.Disabled
             });
             Browser.FindHandler = new ListProcessor.FindResult();
-            Browser.Size = new System.Drawing.Size(1024, 16000);
+            Browser.Size = new Size(1024, 16000);
 
             Go.Enabled = false;
         }
@@ -103,6 +104,7 @@ namespace UFCFinderApp
             {
                 Browser.FrameLoadEnd -= Browser_FacebookLoaded;
                 Browser.FrameLoadEnd += Browser_FacebookLoggedIn;
+                Browser.LoadError += Browser_LoadError;
 
                 Browser.ExecuteScriptAsync(
                     string.Format(
@@ -117,11 +119,21 @@ namespace UFCFinderApp
             }
         }
 
+        private void Browser_LoadError(object sender, LoadErrorEventArgs e)
+        {
+            if (e.Frame.IsMain)
+            {
+                Browser.LoadError -= Browser_LoadError;
+                Invoke((MethodInvoker)delegate { FacebookPanel.Show(); });
+            }
+        }
+
         private void Browser_FacebookLoggedIn(object sender, FrameLoadEndEventArgs e)
         {
             if (e.Frame.IsMain)
             {
                 Browser.FrameLoadEnd -= Browser_FacebookLoggedIn;
+                Browser.LoadError -= Browser_LoadError;
                 Invoke((MethodInvoker)delegate { Go.Enabled = true; });
             }
         }

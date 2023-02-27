@@ -64,6 +64,8 @@ namespace UFCFinderApp
                 Errors = new List<string>()
             };
 
+            Browser.LoadError += Browser_LoadError;
+
             // Go through the locations in the watch list
             foreach (UFCLocation location in watchList)
             {
@@ -85,7 +87,7 @@ namespace UFCFinderApp
 
                     // Load url in browser
                     Browser.Load(url);
-
+                    
                     while (!Loaded)
                         Application.DoEvents();
 
@@ -93,7 +95,16 @@ namespace UFCFinderApp
                     Browser.Stop();
 
                     if (Debugger.IsAttached)
-                        Browser.ScreenshotOrNull().Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Url" + Progress.Value.ToString() + ".jpg");
+                    {
+                        Bitmap screenshot = Browser.ScreenshotOrNull();
+
+                        if (screenshot != null)
+                        {
+                            screenshot.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Url" + Progress.Value.ToString() + ".jpg");
+
+                            screenshot.Dispose();
+                        }
+                    }
 
                     List<string> matchedPhrases = new List<string>();
 
@@ -248,6 +259,11 @@ namespace UFCFinderApp
 
             ((HtmlLabel)HtmlPanel.Controls.Find("HtmlView", true).First()).Text = html;
             HtmlPanel.Show();
+        }
+
+        private static void Browser_LoadError(object sender, LoadErrorEventArgs e)
+        {
+            var test = 1;
         }
     }
 }
